@@ -107,6 +107,17 @@ class GameQuestion < ActiveRecord::Base
     save
   end
 
+  # Добавляем в help_hash по ключю fifty_fifty — массив из двух вариантов:
+  # правильный и случайный и сохраняем объект.
+  def add_fifty_fifty
+    self.help_hash[:fifty_fifty] = [
+      correct_answer_key,
+      (%w(a b c d) - [correct_answer_key]).sample
+    ]
+
+    save
+  end
+
   def apply_help!(help_type)
     case help_type.to_sym
     when :fifty_fifty
