@@ -118,16 +118,16 @@ RSpec.describe Game, type: :model do
     end
   end
 
-  context '.current_game_question' do
-    it 'correct .current_game_question' do
-      expect(game_w_questions.current_game_question.level).to eq(game_w_questions.current_level)
+  describe '.current_game_question' do
+    it 'return current game question' do
+      expect(game_w_questions.current_game_question).to eq(game_w_questions.game_questions[0])
     end
   end
 
-  context '.previous_level' do
-    it 'correct .previous_level' do
-      level = game_w_questions.current_level
+  describe '.previous_level' do
+    let(:level) { game_w_questions.current_level }
 
+    it 'return correct level' do
       expect(game_w_questions.previous_level).to eq(level - 1)
     end
   end
