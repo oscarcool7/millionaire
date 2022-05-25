@@ -164,6 +164,24 @@ class Game < ActiveRecord::Base
     end
   end
 
+  # Создает варианты подсказок для текущего игрового вопроса.
+  # Возвращает true, если подсказка применилась успешно,
+  # false если подсказка уже заюзана.
+  #
+  # help_type = :fifty_fifty | :audience_help | :friend_call
+  def use_help(help_type)
+    help_types = %i(fifty_fifty audience_help friend_call)
+    help_type = help_type.to_sym
+    raise ArgumentError.new('wrong help_type') unless help_types.include?(help_type)
+
+    unless self["#{help_type}_used"]
+      self["#{help_type}_used"] = true
+      current_game_question.apply_help!(help_type)
+      save
+    end
+    # false не нужен — unless вернёт nil, если не будет исполнен
+  end
+
   private
 
   # Метод finish_game! завершает игру. Он обновляет все нужные поля и начисляет

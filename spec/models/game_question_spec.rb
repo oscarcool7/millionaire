@@ -38,4 +38,30 @@ RSpec.describe GameQuestion, type: :model do
       expect(game_question.correct_answer_key).to eq('b')
     end
   end
+
+  # help_hash у нас имеет такой формат:
+  # {
+  #   fifty_fifty: ['a', 'b'], # При использовании подсказски остались варианты a и b
+  #   audience_help: {'a' => 42, 'c' => 37 ...}, # Распределение голосов по вариантам a, b, c, d
+  #   friend_call: 'Василий Петрович считает, что правильный ответ A'
+  # }
+
+  context 'user helpers' do
+    it 'correct audience_help' do
+      # Проверяем, что объект не включает эту подсказку
+      expect(game_question.help_hash).not_to include(:audience_help)
+
+      # Добавили подсказку. Этот метод реализуем в модели
+      # GameQuestion
+      game_question.add_audience_help
+
+      # Ожидаем, что в хеше появилась подсказка
+      expect(game_question.help_hash).to include(:audience_help)
+
+      # Дёргаем хеш
+      ah = game_question.help_hash[:audience_help]
+      # Проверяем, что входят только ключи a, b, c, d
+      expect(ah.keys).to contain_exactly('a', 'b', 'c', 'd')
+    end
+  end
 end
