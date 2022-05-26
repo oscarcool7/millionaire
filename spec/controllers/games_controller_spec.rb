@@ -130,37 +130,85 @@ RSpec.describe GamesController, type: :controller do
       expect(response).to redirect_to(game_path(game_w_questions))
       expect(flash[:alert]).to be
     end
+  end
 
-    it 'uses audience help' do
-      # сперва проверяем что в подсказках текущего вопроса пусто
-      expect(game_w_questions.current_game_question.help_hash[:audience_help]).not_to be
-      expect(game_w_questions.audience_help_used).to be_falsey
+  describe '#help' do
+    context 'when registered user' do
+      before(:each) { sign_in user }
 
-      # фигачим запрос в контроллен с нужным типом
-      put :help, id: game_w_questions.id, help_type: :audience_help
-      game = assigns(:game)
+      context 'and ask 50/50' do
+        it 'no hint in the help_hash of current question' do
+          expect(game_w_questions.current_game_question.help_hash[:fifty_fifty]).not_to be
+        end
 
-      # проверяем, что игра не закончилась, что флажок установился, и подсказка записалась
-      expect(game.finished?).to be_falsey
-      expect(game.audience_help_used).to be_truthy
-      expect(game.current_game_question.help_hash[:audience_help]).to be
-      expect(game.current_game_question.help_hash[:audience_help].keys).to contain_exactly('a', 'b', 'c', 'd')
-      expect(response).to redirect_to(game_path(game))
-    end
+        it 'the hint was not used' do
+          expect(game_w_questions.fifty_fifty_used).to be false
+        end
 
-    it 'uses 50/50 help' do
-      expect(game_w_questions.current_game_question.help_hash[:fifty_fifty]).not_to be
-      expect(game_w_questions.fifty_fifty_used).to be_falsey
+        context 'when added hint' do
+          before(:each) { put :help, id: game_w_questions.id, help_type: :fifty_fifty }
+          let(:game) { assigns(:game) }
 
-      put :help, id: game_w_questions.id, help_type: :fifty_fifty
-      game = assigns(:game)
+          it 'game not finished' do
+            expect(game.finished?).to be false
+          end
 
-      expect(game.finished?).to be_falsey
-      expect(game.fifty_fifty_used).to be_truthy
-      expect(game.current_game_question.help_hash[:fifty_fifty]).to be
-      expect(game.current_game_question.help_hash[:fifty_fifty]).to include('d')
-      expect(game.current_game_question.help_hash[:fifty_fifty].size).to eq 2
-      expect(response).to redirect_to(game_path(game))
+          it 'the hint was used' do
+            expect(game.fifty_fifty_used).to be true
+          end
+
+          it 'the hint is in the help_hash of current question' do
+            expect(game.current_game_question.help_hash[:fifty_fifty]).to be
+          end
+
+          it 'the hint contains the correct answer' do
+            expect(game.current_game_question.help_hash[:fifty_fifty]).to include('d')
+          end
+
+          it 'the hint contains 2 possible answers' do
+            expect(game.current_game_question.help_hash[:fifty_fifty].size).to eq 2
+          end
+
+          it 'redirect to the current game page' do
+            expect(response).to redirect_to(game_path(game))
+          end
+        end
+      end
+
+      context 'and ask audience help' do
+        it 'no hint in the help_hash of current question' do
+          expect(game_w_questions.current_game_question.help_hash[:audience_help]).not_to be
+        end
+
+        it 'the hint was not used' do
+          expect(game_w_questions.audience_help_used).to be false
+        end
+
+        context 'when added hint' do
+          before(:each) { put :help, id: game_w_questions.id, help_type: :audience_help }
+          let(:game) { assigns(:game) }
+
+          it 'game not finished' do
+            expect(game.finished?).to be false
+          end
+
+          it 'the hint was used' do
+            expect(game.audience_help_used).to be true
+          end
+
+          it 'the hint is in the help_hash of current question' do
+            expect(game.current_game_question.help_hash[:audience_help]).to be
+          end
+
+          it 'the hint contains answer options' do
+            expect(game.current_game_question.help_hash[:audience_help].keys).to contain_exactly('a', 'b', 'c', 'd')
+          end
+
+          it 'redirect to the current game page' do
+            expect(response).to redirect_to(game_path(game))
+          end
+        end
+      end
     end
   end
 end
