@@ -17,19 +17,6 @@ RSpec.describe GamesController, type: :controller do
   # игра с прописанными игровыми вопросами
   let(:game_w_questions) { FactoryBot.create(:game_with_questions, user: user) }
 
-  # группа тестов для незалогиненного юзера (Анонимус)
-  context 'Anon' do
-    # из экшена show анона посылаем
-    it 'kick from #show' do
-      # вызываем экшен
-      get :show, id: game_w_questions.id
-      # проверяем ответ
-      expect(response.status).not_to eq(200) # статус не 200 ОК
-      expect(response).to redirect_to(new_user_session_path) # devise должен отправить на логин
-      expect(flash[:alert]).to be # во flash должен быть прописана ошибка
-    end
-  end
-
   # группа тестов на экшены контроллера, доступных залогиненным юзерам
   context 'Usual user' do
     # перед каждым тестом в группе
@@ -51,17 +38,6 @@ RSpec.describe GamesController, type: :controller do
       expect(flash[:notice]).to be
     end
 
-    # юзер видит свою игру
-    it '#show game' do
-      get :show, id: game_w_questions.id
-      game = assigns(:game) # вытаскиваем из контроллера поле @game
-      expect(game.finished?).to be_falsey
-      expect(game.user).to eq(user)
-
-      expect(response.status).to eq(200) # должен быть ответ HTTP 200
-      expect(response).to render_template('show') # и отрендерить шаблон show
-    end
-
     # юзер отвечает на игру корректно - игра продолжается
     it 'answers correct' do
       # передаем параметр params[:letter]
@@ -75,26 +51,12 @@ RSpec.describe GamesController, type: :controller do
     end
 
     it 'answer incorrect' do
-      # передаем параметр params[:letter]
       put :answer, id: game_w_questions.id
       game = assigns(:game)
 
       expect(game.finished?).to be_truthy
       expect(response).to redirect_to(user_path(user))
       expect(flash[:alert]).to be
-    end
-
-    # проверка, что пользователя посылают из чужой игры
-    it '#show alien game' do
-      # создаем новую игру, юзер не прописан, будет создан фабрикой новый
-      alien_game = FactoryBot.create(:game_with_questions)
-
-      # пробуем зайти на эту игру текущий залогиненным user
-      get :show, id: alien_game.id
-
-      expect(response.status).not_to eq(200) # статус не 200 ОК
-      expect(response).to redirect_to(root_path)
-      expect(flash[:alert]).to be # во flash должен быть прописана ошибка
     end
 
     # юзер берет деньги
@@ -207,6 +169,73 @@ RSpec.describe GamesController, type: :controller do
           it 'redirect to the current game page' do
             expect(response).to redirect_to(game_path(game))
           end
+        end
+      end
+    end
+  end
+
+  describe '#show' do
+    # группа тестов для незалогиненного юзера (Анонимус)
+    context 'when anonymous user' do
+      before(:each) { get :show, id: game_w_questions.id }
+      # вызываем экшен
+      context "kick" do
+        it 'the status is not 200' do
+          expect(response.status).not_to eq(200) # статус не 200 ОК
+        end
+
+        it 'redirect to the log in' do
+          expect(response).to redirect_to(new_user_session_path) # devise должен отправить на логин
+        end
+
+        it 'flash has an alert' do
+          expect(flash[:alert]).to be # во flash должен быть прописана ошибка
+        end
+      end
+    end
+
+    # группа тестов, доступных залогиненным юзерам
+    context 'when registered user' do
+      before(:each) { sign_in user }
+
+      context 'sees the own game' do
+        before(:each) { get :show, id: game_w_questions.id }
+        let(:game) { assigns(:game) }
+
+        it 'the game not finished' do
+          expect(game.finished?).to be false
+        end
+
+        it 'user is correct' do
+          expect(game.user).to eq(user)
+        end
+
+        it 'the status is 200' do
+          expect(response.status).to eq(200)
+        end
+
+        it 'render show' do
+          expect(response).to render_template('show')
+        end
+      end
+
+      # проверка, что пользователя посылают из чужой игры
+      context 'alien game' do
+        # создаем новую игру, юзер не прописан, будет создан фабрикой новый
+        let(:alien_game) { FactoryBot.create(:game_with_questions) }
+        # пробуем зайти на эту игру текущий залогиненным user
+        before(:each) { get :show, id: alien_game.id }
+
+        it 'the status is not 200' do
+          expect(response.status).not_to eq(200) # статус не 200 ОК
+        end
+
+        it 'redirect to root path' do
+          expect(response).to redirect_to(root_path)
+        end
+
+        it 'flash has an alert' do
+          expect(flash[:alert]).to be # во flash должен быть прописана ошибка
         end
       end
     end
