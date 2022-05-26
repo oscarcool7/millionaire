@@ -57,6 +57,7 @@ RSpec.describe GamesController, type: :controller do
       expect(game.finished?).to be_truthy
       expect(response).to redirect_to(user_path(user))
       expect(flash[:alert]).to be
+      expect(game.status).to eq(:fail)
     end
 
     # юзер берет деньги
