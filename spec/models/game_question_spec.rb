@@ -106,6 +106,7 @@ RSpec.describe GameQuestion, type: :model do
       fc = game_question.help_hash[:friend_call]
 
       expect(fc).to be_a(String)
+      expect(fc).to include("считает, что это вариант")
     end
   end
 end
