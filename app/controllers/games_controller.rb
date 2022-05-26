@@ -37,7 +37,7 @@ class GamesController < ApplicationController
                          "msg = #{ex}. #{ex.backtrace}")
 
       # Отправляемся назад с алертом
-      redirect_to :back, alert: I18n.t('controllers.games.game_not_created')
+      redirect_to root_path, alert: I18n.t('controllers.games.game_not_created')
     end
   end
 
