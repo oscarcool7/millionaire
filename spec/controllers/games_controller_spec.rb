@@ -64,7 +64,8 @@ RSpec.describe GamesController, type: :controller do
       end
 
       context 'answer incorrect' do
-        before(:each) { put :answer, id: game_w_questions.id }
+        before(:each) { put :answer, id: game_w_questions.id,
+          letter: (%w(a b c d) - [game_w_questions.current_game_question.correct_answer_key]).sample }
         let(:game) { assigns(:game) }
 
         it 'game finished' do
