@@ -19,7 +19,7 @@ RSpec.describe GamesController, type: :controller do
 
   describe '#answer' do
     context 'when anonymous user' do
-      before(:each) { get :show, id: game_w_questions.id }
+      before { get :show, id: game_w_questions.id }
 
       it 'flash has an alert' do
         expect(flash[:alert]).to be
@@ -39,11 +39,14 @@ RSpec.describe GamesController, type: :controller do
     end
 
     context 'when registered user' do
-      before(:each) { sign_in user }
+      before { sign_in user }
 
       context 'answer correct' do
-        before(:each) { put :answer, id: game_w_questions.id,
-          letter: game_w_questions.current_game_question.correct_answer_key }
+        before {
+          put :answer, id: game_w_questions.id,
+          letter: game_w_questions.current_game_question.correct_answer_key
+        }
+
         let(:game) { assigns(:game) }
 
         it 'game not finished' do
@@ -64,8 +67,11 @@ RSpec.describe GamesController, type: :controller do
       end
 
       context 'answer incorrect' do
-        before(:each) { put :answer, id: game_w_questions.id,
-          letter: (%w(a b c d) - [game_w_questions.current_game_question.correct_answer_key]).sample }
+        before {
+          put :answer, id: game_w_questions.id,
+          letter: (%w(a b c d) - [game_w_questions.current_game_question.correct_answer_key]).sample
+        }
+
         let(:game) { assigns(:game) }
 
         it 'game finished' do
@@ -89,7 +95,7 @@ RSpec.describe GamesController, type: :controller do
 
   describe '#create' do
     context 'when anonymous user' do
-      before(:each) { post :create }
+      before { post :create }
 
       it 'flash has an alert' do
         expect(flash[:alert]).to be
@@ -109,10 +115,10 @@ RSpec.describe GamesController, type: :controller do
     end
 
     context 'when registered user' do
-      before(:each) { sign_in user }
+      before { sign_in user }
 
       context 'create new game' do
-        before(:each) do
+        before do
           generate_questions(15)
           post :create
         end
@@ -157,7 +163,7 @@ RSpec.describe GamesController, type: :controller do
 
   describe '#help' do
     context 'when anonymous user' do
-      before(:each) { get :show, id: game_w_questions.id }
+      before { get :show, id: game_w_questions.id }
 
       it 'flash has an alert' do
         expect(flash[:alert]).to be
@@ -177,7 +183,7 @@ RSpec.describe GamesController, type: :controller do
     end
 
     context 'when registered user' do
-      before(:each) { sign_in user }
+      before { sign_in user }
 
       context 'and ask 50/50' do
         it 'no hint in the help_hash of current question' do
@@ -189,7 +195,7 @@ RSpec.describe GamesController, type: :controller do
         end
 
         context 'when added hint' do
-          before(:each) { put :help, id: game_w_questions.id, help_type: :fifty_fifty }
+          before { put :help, id: game_w_questions.id, help_type: :fifty_fifty }
           let(:game) { assigns(:game) }
 
           it 'game not finished' do
@@ -205,7 +211,8 @@ RSpec.describe GamesController, type: :controller do
           end
 
           it 'the hint contains the correct answer' do
-            expect(game.current_game_question.help_hash[:fifty_fifty]).to include('d')
+            expect(game.current_game_question.help_hash[:fifty_fifty]).
+              to include(game.current_game_question.correct_answer_key)
           end
 
           it 'the hint contains 2 possible answers' do
@@ -228,7 +235,7 @@ RSpec.describe GamesController, type: :controller do
         end
 
         context 'when added hint' do
-          before(:each) { put :help, id: game_w_questions.id, help_type: :audience_help }
+          before { put :help, id: game_w_questions.id, help_type: :audience_help }
           let(:game) { assigns(:game) }
 
           it 'game not finished' do
@@ -258,7 +265,7 @@ RSpec.describe GamesController, type: :controller do
   describe '#show' do
     # группа тестов для незалогиненного юзера (Анонимус)
     context 'when anonymous user' do
-      before(:each) { get :show, id: game_w_questions.id }
+      before { get :show, id: game_w_questions.id }
       # вызываем экшен
       context "kick" do
         it 'the status is not 200' do
@@ -277,10 +284,10 @@ RSpec.describe GamesController, type: :controller do
 
     # группа тестов, доступных залогиненным юзерам
     context 'when registered user' do
-      before(:each) { sign_in user }
+      before { sign_in user }
 
       context 'sees the own game' do
-        before(:each) { get :show, id: game_w_questions.id }
+        before { get :show, id: game_w_questions.id }
         let(:game) { assigns(:game) }
 
         it 'the game not finished' do
@@ -305,7 +312,7 @@ RSpec.describe GamesController, type: :controller do
         # создаем новую игру, юзер не прописан, будет создан фабрикой новый
         let(:alien_game) { FactoryBot.create(:game_with_questions) }
         # пробуем зайти на эту игру текущий залогиненным user
-        before(:each) { get :show, id: alien_game.id }
+        before { get :show, id: alien_game.id }
 
         it 'the status is not 200' do
           expect(response.status).not_to eq(200) # статус не 200 ОК
@@ -324,7 +331,7 @@ RSpec.describe GamesController, type: :controller do
 
   describe '#take_money' do
     context 'when anonymous user' do
-      before(:each) { get :show, id: game_w_questions.id }
+      before { get :show, id: game_w_questions.id }
 
       it 'flash has an alert' do
         expect(flash[:alert]).to be
@@ -344,7 +351,7 @@ RSpec.describe GamesController, type: :controller do
     end
 
     context 'when registered user' do
-      before(:each) do
+      before do
         sign_in user
         game_w_questions.update_attribute(:current_level, 2) # вручную поднимем уровень вопроса до выигрыша 200
         put :take_money, id: game_w_questions.id
@@ -362,7 +369,7 @@ RSpec.describe GamesController, type: :controller do
 
       context 'after taking the money' do
         # пользователь изменился в базе, надо в коде перезагрузить!
-        before(:each) { user.reload }
+        before { user.reload }
 
         it 'correct user balance' do
           expect(user.balance).to eq(200)
