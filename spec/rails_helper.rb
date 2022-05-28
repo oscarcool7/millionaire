@@ -50,6 +50,9 @@ RSpec.configure do |config|
   config.include Devise::TestHelpers, type: :controller
   config.include Devise::TestHelpers, type: :view
 
+  # Подключаем в фичах специальные хелперы для авторизации
+  config.include Warden::Test::Helpers, type: :feature
+
   # RSpec Rails can automatically mix in different behaviours to your tests
   # based on their file location, for example enabling you to call `get` and
   # `post` in specs under `spec/controllers`.
@@ -70,3 +73,6 @@ RSpec.configure do |config|
   # arbitrary gems may also be filtered via:
   # config.filter_gems_from_backtrace("gem name")
 end
+
+# Это нужно, чтобы капибара искала стили и js в правильном месте
+Capybara.asset_host = "http://localhost:3000"
