@@ -4,11 +4,25 @@ RSpec.feature 'USER views another user', type: :feature do
   let(:user) { FactoryBot.create(:user, name: 'Alex') }
 
   let(:game1) do
-    FactoryBot.create(:game, user: user, current_level: 6, prize: 2000, created_at: '28 мая, 11:04')
+    FactoryBot.create(
+      :game,
+      user: user,
+      current_level: 6,
+      prize: 2000,
+      created_at: '28 мая, 11:04')
   end
 
   let(:game2) do
-    FactoryBot.create( :game, user: user, current_level: 2, prize: 0, created_at: '28 мая, 11:10')
+    FactoryBot.create(
+      :game,
+      user: user,
+      current_level: 12,
+      prize: 0,
+      is_failed: true,
+      fifty_fifty_used: true,
+      created_at: '28 мая, 11:10',
+      finished_at: '28 мая, 11:20'
+    )
   end
 
   let!(:games) { [game1, game2] }
@@ -43,6 +57,10 @@ RSpec.feature 'USER views another user', type: :feature do
       scenario 'gets prize' do
         expect(page).to have_content '2 000 ₽'
       end
+
+      scenario 'is in progress' do
+        expect(page).to have_content 'в процессе'
+      end
     end
 
     feature 'game2' do
@@ -54,8 +72,12 @@ RSpec.feature 'USER views another user', type: :feature do
         expect(page).to have_content(game2.current_level)
       end
 
-      scenario 'gets prize' do
-        expect(page).to have_content '0 ₽'
+      scenario 'gets 50/50 hint' do
+        expect(page).to have_content '50/50'
+      end
+
+      scenario 'is failed' do
+        expect(page).to have_content 'проигрыш'
       end
     end
   end
